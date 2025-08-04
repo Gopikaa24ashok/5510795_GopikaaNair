@@ -4,3 +4,5 @@
 
 ## 📝 GIT - Simplilearn
 [![GIT Certificate](GIT_learning/GIT_certificate.png)]
+## 📝 GIT - Simplilearn
+[![Solo](GIT_learning/GIT_certificate.png)]
