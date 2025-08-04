@@ -7,4 +7,4 @@
 ## 📝 GIT - Simplilearn
 [![Solo](GIT_learning/GIT_certificate.png)]
 ## 📝 Basic c
-[![Solo](Sololearn certificate\Basic c.ppg)]
+[![Solo]()]
