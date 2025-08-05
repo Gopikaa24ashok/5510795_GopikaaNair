@@ -8,3 +8,5 @@
 [![Solo](GIT_learning/GIT_certificate.png)]
 ## 📝 Basic - c
 [![Solo](Sololearn_Certificate/Basic_c.png)]
+## 📝 Intermidiate c
+[![Solo](Sololearn_Certificate/Intermediate _c.png)]
