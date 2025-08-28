@@ -1,0 +1,1395 @@
+1.Equal Stacks
+#include <assert.h>
+#include <ctype.h>
+#include <limits.h>
+#include <math.h>
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+char* readline();
+char* ltrim(char*);
+char* rtrim(char*);
+char** split_string(char*);
+
+int parse_int(char*);
+
+/*
+ * Complete the 'equalStacks' function below.
+ *
+ * The function is expected to return an INTEGER.
+ * The function accepts following parameters:
+ *  1. INTEGER_ARRAY h1
+ *  2. INTEGER_ARRAY h2
+ *  3. INTEGER_ARRAY h3
+ */
+
+int equalStacks(int h1_count, int* h1, int h2_count, int* h2, int h3_count, int* h3) {
+    // Build the set of all possible heights for each stack
+    // (start at full height, then pop from the TOP which is index 0)
+    long s1 = 0, s2 = 0, s3 = 0;
+    for (int i = 0; i < h1_count; i++) s1 += h1[i];
+    for (int i = 0; i < h2_count; i++) s2 += h2[i];
+    for (int i = 0; i < h3_count; i++) s3 += h3[i];
+
+    // possible heights, descending
+    int a1[h1_count + 1], a2[h2_count + 1], a3[h3_count + 1];
+    a1[0] = (int)s1; for (int i = 0; i < h1_count; i++) { s1 -= h1[i]; a1[i+1] = (int)s1; }
+    a2[0] = (int)s2; for (int i = 0; i < h2_count; i++) { s2 -= h2[i]; a2[i+1] = (int)s2; }
+    a3[0] = (int)s3; for (int i = 0; i < h3_count; i++) { s3 -= h3[i]; a3[i+1] = (int)s3; }
+
+    // three-pointer walk to find largest common height
+    int i = 0, j = 0, k = 0;
+    while (i <= h1_count && j <= h2_count && k <= h3_count) {
+        int x = a1[i], y = a2[j], z = a3[k];
+        if (x == y && y == z) return x;
+        if (x >= y && x >= z) i++;        // drop height in the tallest list
+        else if (y >= x && y >= z) j++;
+        else k++;
+    }
+    return 0;
+}
+
+int main()
+{
+    FILE* fptr = fopen(getenv("OUTPUT_PATH"), "w");
+
+    char** first_multiple_input = split_string(rtrim(readline()));
+
+    int n1 = parse_int(*(first_multiple_input + 0));
+
+    int n2 = parse_int(*(first_multiple_input + 1));
+
+    int n3 = parse_int(*(first_multiple_input + 2));
+
+    char** h1_temp = split_string(rtrim(readline()));
+
+    int* h1 = malloc(n1 * sizeof(int));
+
+    for (int i = 0; i < n1; i++) {
+        int h1_item = parse_int(*(h1_temp + i));
+
+        *(h1 + i) = h1_item;
+    }
+
+    char** h2_temp = split_string(rtrim(readline()));
+
+    int* h2 = malloc(n2 * sizeof(int));
+
+    for (int i = 0; i < n2; i++) {
+        int h2_item = parse_int(*(h2_temp + i));
+
+        *(h2 + i) = h2_item;
+    }
+
+    char** h3_temp = split_string(rtrim(readline()));
+
+    int* h3 = malloc(n3 * sizeof(int));
+
+    for (int i = 0; i < n3; i++) {
+        int h3_item = parse_int(*(h3_temp + i));
+
+        *(h3 + i) = h3_item;
+    }
+
+    int result = equalStacks(n1, h1, n2, h2, n3, h3);
+
+    fprintf(fptr, "%d\n", result);
+
+    fclose(fptr);
+
+    return 0;
+}
+
+char* readline() {
+    size_t alloc_length = 1024;
+    size_t data_length = 0;
+
+    char* data = malloc(alloc_length);
+
+    while (true) {
+        char* cursor = data + data_length;
+        char* line = fgets(cursor, alloc_length - data_length, stdin);
+
+        if (!line) {
+            break;
+        }
+
+        data_length += strlen(cursor);
+
+        if (data_length < alloc_length - 1 || data[data_length - 1] == '\n') {
+            break;
+        }
+
+        alloc_length <<= 1;
+
+        data = realloc(data, alloc_length);
+
+        if (!data) {
+            data = '\0';
+
+            break;
+        }
+    }
+
+    if (data[data_length - 1] == '\n') {
+        data[data_length - 1] = '\0';
+
+        data = realloc(data, data_length);
+
+        if (!data) {
+            data = '\0';
+        }
+    } else {
+        data = realloc(data, data_length + 1);
+
+        if (!data) {
+            data = '\0';
+        } else {
+            data[data_length] = '\0';
+        }
+    }
+
+    return data;
+}
+
+char* ltrim(char* str) {
+    if (!str) {
+        return '\0';
+    }
+
+    if (!*str) {
+        return str;
+    }
+
+    while (*str != '\0' && isspace(*str)) {
+        str++;
+    }
+
+    return str;
+}
+
+char* rtrim(char* str) {
+    if (!str) {
+        return '\0';
+    }
+
+    if (!*str) {
+        return str;
+    }
+
+    char* end = str + strlen(str) - 1;
+
+    while (end >= str && isspace(*end)) {
+        end--;
+    }
+
+    *(end + 1) = '\0';
+
+    return str;
+}
+
+char** split_string(char* str) {
+    char** splits = NULL;
+    char* token = strtok(str, " ");
+
+    int spaces = 0;
+
+    while (token) {
+        splits = realloc(splits, sizeof(char*) * ++spaces);
+
+        if (!splits) {
+            return splits;
+        }
+
+        splits[spaces - 1] = token;
+
+        token = strtok(NULL, " ");
+    }
+
+    return splits;
+}
+
+int parse_int(char* str) {
+    char* endptr;
+    int value = strtol(str, &endptr, 10);
+
+    if (endptr == str || *endptr != '\0') {
+        exit(EXIT_FAILURE);
+    }
+
+    return value;
+}
+
+2.The Maximum 
+#include <stdio.h>
+
+int maxSubarray(int n, int arr[], int *subarray_sum, int *subsequence_sum) {
+    // Kadane's Algorithm for max subarray
+    int max_so_far = arr[0];
+    int curr_max = arr[0];
+    for (int i = 1; i < n; i++) {
+        if (curr_max + arr[i] > arr[i])
+            curr_max = curr_max + arr[i];
+        else
+            curr_max = arr[i];
+        if (curr_max > max_so_far)
+            max_so_far = curr_max;
+    }
+    *subarray_sum = max_so_far;
+
+    // Max subsequence
+    int max_elem = arr[0];
+    long long subseq = 0;
+    for (int i = 0; i < n; i++) {
+        if (arr[i] > 0) subseq += arr[i];
+        if (arr[i] > max_elem) max_elem = arr[i];
+    }
+    if (subseq > 0)
+        *subsequence_sum = (int)subseq;
+    else
+        *subsequence_sum = max_elem;  // all negative case
+    return 0;
+}
+
+int main() {
+    int t;
+    scanf("%d", &t);
+    while (t--) {
+        int n;
+        scanf("%d", &n);
+        int arr[n];
+        for (int i = 0; i < n; i++) scanf("%d", &arr[i]);
+
+        int subarray_sum, subsequence_sum;
+        maxSubarray(n, arr, &subarray_sum, &subsequence_sum);
+
+        printf("%d %d\n", subarray_sum, subsequence_sum);
+    }
+    return 0;
+}
+
+
+3.Lego Blocks
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+
+#define MOD 1000000007
+
+long long modpow(long long base, long long exp) {
+    long long result = 1;
+    while (exp > 0) {
+        if (exp % 2 == 1) result = (result * base) % MOD;
+        base = (base * base) % MOD;
+        exp /= 2;
+    }
+    return result;
+}
+
+int legoBlocks(int n, int m) {
+    long long row[m+1];
+    row[0] = 1;
+    for (int i = 1; i <= m; i++) {
+        row[i] = 0;
+        for (int b = 1; b <= 4; b++) {
+            if (i - b >= 0) row[i] = (row[i] + row[i-b]) % MOD;
+        }
+    }
+
+    long long total[m+1];
+    for (int i = 1; i <= m; i++) {
+        total[i] = modpow(row[i], n);
+    }
+
+    long long valid[m+1];
+    valid[0] = 1;
+    for (int i = 1; i <= m; i++) {
+        valid[i] = total[i];
+        for (int k = 1; k < i; k++) {
+            valid[i] = (valid[i] - (valid[k] * total[i-k]) % MOD + MOD) % MOD;
+        }
+    }
+
+    return (int)valid[m];
+}
+
+int main() {
+    int t;
+    scanf("%d", &t);
+    while (t--) {
+        int n, m;
+        scanf("%d %d", &n, &m);
+        printf("%d\n", legoBlocks(n, m));
+    }
+    return 0;
+}
+
+4.QHEAP1
+#include <stdio.h>
+#include <stdlib.h>
+
+#define MAX 100000
+
+int heap[MAX];
+int size = 0;
+
+void swap(int *a, int *b) {
+    int t = *a;
+    *a = *b;
+    *b = t;
+}
+
+void heapifyUp(int i) {
+    while (i > 0 && heap[(i - 1) / 2] > heap[i]) {
+        swap(&heap[i], &heap[(i - 1) / 2]);
+        i = (i - 1) / 2;
+    }
+}
+
+void heapifyDown(int i) {
+    int smallest = i;
+    int left = 2 * i + 1;
+    int right = 2 * i + 2;
+
+    if (left < size && heap[left] < heap[smallest]) smallest = left;
+    if (right < size && heap[right] < heap[smallest]) smallest = right;
+
+    if (smallest != i) {
+        swap(&heap[i], &heap[smallest]);
+        heapifyDown(smallest);
+    }
+}
+
+void insert(int val) {
+    heap[size] = val;
+    size++;
+    heapifyUp(size - 1);
+}
+
+void deleteValue(int val) {
+    int i;
+    for (i = 0; i < size; i++) {
+        if (heap[i] == val) break;
+    }
+    if (i == size) return; // value not found (should not happen)
+
+    heap[i] = heap[size - 1];
+    size--;
+    heapifyDown(i);
+    heapifyUp(i);
+}
+
+int getMin() {
+    return heap[0];
+}
+
+int main() {
+    int Q;
+    scanf("%d", &Q);
+    while (Q--) {
+        int type, v;
+        scanf("%d", &type);
+        if (type == 1) {
+            scanf("%d", &v);
+            insert(v);
+        } else if (type == 2) {
+            scanf("%d", &v);
+            deleteValue(v);
+        } else if (type == 3) {
+            printf("%d\n", getMin());
+        }
+    }
+    return 0;
+}
+
+
+5.Jesse and Cookies
+#include <stdio.h>
+#include <stdlib.h>
+
+// ----------- Min-Heap Helper Functions -----------
+
+void swap(int *a, int *b) {
+    int t = *a;
+    *a = *b;
+    *b = t;
+}
+
+void heapifyDown(int heap[], int n, int i) {
+    int smallest = i;
+    int left = 2*i + 1;
+    int right = 2*i + 2;
+
+    if (left < n && heap[left] < heap[smallest])
+        smallest = left;
+    if (right < n && heap[right] < heap[smallest])
+        smallest = right;
+
+    if (smallest != i) {
+        swap(&heap[i], &heap[smallest]);
+        heapifyDown(heap, n, smallest);
+    }
+}
+
+void heapifyUp(int heap[], int i) {
+    int parent = (i-1)/2;
+    if (i > 0 && heap[i] < heap[parent]) {
+        swap(&heap[i], &heap[parent]);
+        heapifyUp(heap, parent);
+    }
+}
+
+int extractMin(int heap[], int *size) {
+    if (*size <= 0) return -1;
+    int root = heap[0];
+    heap[0] = heap[*size - 1];
+    (*size)--;
+    heapifyDown(heap, *size, 0);
+    return root;
+}
+
+void insertHeap(int heap[], int *size, int val) {
+    heap[*size] = val;
+    (*size)++;
+    heapifyUp(heap, *size - 1);
+}
+
+// ----------- Main Function for Jesse Cookies -----------
+
+int cookies(int k, int A[], int n) {
+    int heap[n+5];
+    int size = 0;
+
+    // Build heap
+    for (int i = 0; i < n; i++) {
+        insertHeap(heap, &size, A[i]);
+    }
+
+    int operations = 0;
+
+    while (size > 0 && heap[0] < k) {
+        if (size < 2) return -1;
+
+        int least = extractMin(heap, &size);
+        int second = extractMin(heap, &size);
+
+        int new_cookie = least + 2*second;
+        insertHeap(heap, &size, new_cookie);
+
+        operations++;
+    }
+
+    return operations;
+}
+
+int main() {
+    int n, k;
+    scanf("%d %d", &n, &k);
+
+    int A[n];
+    for (int i = 0; i < n; i++) scanf("%d", &A[i]);
+
+    int result = cookies(k, A, n);
+    printf("%d\n", result);
+
+    return 0;
+}
+
+6.Hackerland Radio Transmitters
+#include <stdio.h>
+#include <stdlib.h>
+
+// comparison function for qsort
+int cmp(const void *a, const void *b) {
+    return (*(int *)a - *(int *)b);
+}
+
+int hackerlandRadioTransmitters(int x[], int n, int k) {
+    qsort(x, n, sizeof(int), cmp); // Step 1: sort
+    
+    int i = 0;
+    int transmitters = 0;
+    
+    while (i < n) {
+        transmitters++;
+        
+        // Step 2: move to the furthest house within range k of x[i]
+        int loc = x[i] + k;
+        while (i < n && x[i] <= loc) i++;
+        
+        // Step 3: place transmitter at the furthest possible house
+        int transmitter = x[i-1];
+        
+        // Step 4: skip all houses covered by this transmitter
+        loc = transmitter + k;
+        while (i < n && x[i] <= loc) i++;
+    }
+    
+    return transmitters;
+}
+
+int main() {
+    int n, k;
+    scanf("%d %d", &n, &k);
+    int x[n];
+    for (int i = 0; i < n; i++) scanf("%d", &x[i]);
+    
+    printf("%d\n", hackerlandRadioTransmitters(x, n, k));
+    return 0;
+}
+
+7.Queries with Fixed Length
+#include <stdio.h>
+#include <stdlib.h>
+#include <limits.h>
+
+int solveOneQuery(int* arr, int n, int d) {
+    int minOfMax = INT_MAX;
+    int* dq = malloc(n * sizeof(int));
+    int f = 0, b = -1;
+
+    for (int i = 0; i < n; i++) {
+        while (f <= b && arr[dq[b]] <= arr[i]) b--;
+        dq[++b] = i;
+        if (dq[f] <= i - d) f++;
+        if (i >= d - 1) {
+            int maxInWindow = arr[dq[f]];
+            if (maxInWindow < minOfMax) minOfMax = maxInWindow;
+        }
+    }
+    free(dq);
+    return minOfMax;
+}
+
+int main() {
+    int n, q;
+    scanf("%d %d", &n, &q);
+
+    int* arr = malloc(n * sizeof(int));
+    for (int i = 0; i < n; i++) {
+        scanf("%d", &arr[i]);
+    }
+
+    for (int i = 0; i < q; i++) {
+        int d;
+        scanf("%d", &d);
+        int ans = solveOneQuery(arr, n, d);
+        printf("%d\n", ans);
+    }
+
+    free(arr);
+    return 0;
+}
+
+8.Array Manipulation
+
+#include <assert.h>
+#include <ctype.h>
+#include <limits.h>
+#include <math.h>
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+char* readline();
+char* ltrim(char*);
+char* rtrim(char*);
+char** split_string(char*);
+
+int parse_int(char*);
+
+/*
+ * Complete the 'arrayManipulation' function below.
+ *
+ * The function is expected to return a LONG_INTEGER.
+ * The function accepts following parameters:
+ *  1. INTEGER n
+ *  2. 2D_INTEGER_ARRAY queries
+ */
+
+long arrayManipulation(int n, int queries_rows, int queries_columns, int** queries) {
+    long *arr = (long *) calloc(n+2,sizeof(long));
+    long max =0,sum =0;
+    for (int i =0;i < queries_rows;i++){
+        int a = queries[i][0];
+        int b = queries[i][1];
+        int k = queries[i][2];
+        arr[a] += k;
+        arr[b+1] -= k;
+    }
+    for (int i = 1;i <=n;i++){
+        sum += arr[i];
+        if(sum > max){
+            max = sum;
+        }
+    }
+    free(arr);
+    return max;
+}
+
+int main()
+{
+    FILE* fptr = fopen(getenv("OUTPUT_PATH"), "w");
+
+    char** first_multiple_input = split_string(rtrim(readline()));
+
+    int n = parse_int(*(first_multiple_input + 0));
+
+    int m = parse_int(*(first_multiple_input + 1));
+
+    int** queries = malloc(m * sizeof(int*));
+
+    for (int i = 0; i < m; i++) {
+        *(queries + i) = malloc(3 * (sizeof(int)));
+
+        char** queries_item_temp = split_string(rtrim(readline()));
+
+        for (int j = 0; j < 3; j++) {
+            int queries_item = parse_int(*(queries_item_temp + j));
+
+            *(*(queries + i) + j) = queries_item;
+        }
+    }
+
+    long result = arrayManipulation(n, m, 3, queries);
+
+    fprintf(fptr, "%ld\n", result);
+
+    fclose(fptr);
+
+    return 0;
+}
+
+char* readline() {
+    size_t alloc_length = 1024;
+    size_t data_length = 0;
+
+    char* data = malloc(alloc_length);
+
+    while (true) {
+        char* cursor = data + data_length;
+        char* line = fgets(cursor, alloc_length - data_length, stdin);
+
+        if (!line) {
+            break;
+        }
+
+        data_length += strlen(cursor);
+
+        if (data_length < alloc_length - 1 || data[data_length - 1] == '\n') {
+            break;
+        }
+
+        alloc_length <<= 1;
+
+        data = realloc(data, alloc_length);
+
+        if (!data) {
+            data = '\0';
+
+            break;
+        }
+    }
+
+    if (data[data_length - 1] == '\n') {
+        data[data_length - 1] = '\0';
+
+        data = realloc(data, data_length);
+
+        if (!data) {
+            data = '\0';
+        }
+    } else {
+        data = realloc(data, data_length + 1);
+
+        if (!data) {
+            data = '\0';
+        } else {
+            data[data_length] = '\0';
+        }
+    }
+
+    return data;
+}
+
+char* ltrim(char* str) {
+    if (!str) {
+        return '\0';
+    }
+
+    if (!*str) {
+        return str;
+    }
+
+    while (*str != '\0' && isspace(*str)) {
+        str++;
+    }
+
+    return str;
+}
+
+char* rtrim(char* str) {
+    if (!str) {
+        return '\0';
+    }
+
+    if (!*str) {
+        return str;
+    }
+
+    char* end = str + strlen(str) - 1;
+
+    while (end >= str && isspace(*end)) {
+        end--;
+    }
+
+    *(end + 1) = '\0';
+
+    return str;
+}
+
+char** split_string(char* str) {
+    char** splits = NULL;
+    char* token = strtok(str, " ");
+
+    int spaces = 0;
+
+    while (token) {
+        splits = realloc(splits, sizeof(char*) * ++spaces);
+
+        if (!splits) {
+            return splits;
+        }
+
+        splits[spaces - 1] = token;
+
+        token = strtok(NULL, " ");
+    }
+
+    return splits;
+}
+
+int parse_int(char* str) {
+    char* endptr;
+    int value = strtol(str, &endptr, 10);
+
+    if (endptr == str || *endptr != '\0') {
+        exit(EXIT_FAILURE);
+    }
+
+    return value;
+}
+
+
+9.Highest Value Palindrome
+#include <stdio.h>
+#include <string.h>
+
+char* highestValuePalindrome(char* s, int n, int k) {
+    static char result[100005];  // enough space for max n
+    int changes[100005] = {0};   // track changed positions
+    strcpy(result, s);
+
+    int l = 0, r = n - 1;
+    int remaining = k;
+
+    // Step 1: Make it palindrome minimally
+    while (l < r) {
+        if (result[l] != result[r]) {
+            if (result[l] > result[r]) {
+                result[r] = result[l];
+            } else {
+                result[l] = result[r];
+            }
+            changes[l] = changes[r] = 1;
+            remaining--;
+        }
+        l++;
+        r--;
+    }
+
+    if (remaining < 0) return "-1"; // impossible
+
+    // Step 2: Maximize by making digits '9'
+    l = 0;
+    r = n - 1;
+    while (l <= r && remaining > 0) {
+        if (l == r) { // middle digit in odd-length
+            if (remaining > 0) {
+                result[l] = '9';
+                remaining--;
+            }
+        } else {
+            if (result[l] != '9') {
+                if (changes[l] || changes[r]) {
+                    if (remaining >= 1) {
+                        result[l] = result[r] = '9';
+                        remaining--;
+                    }
+                } else if (remaining >= 2) {
+                    result[l] = result[r] = '9';
+                    remaining -= 2;
+                }
+            }
+        }
+        l++;
+        r--;
+    }
+
+    return result;
+}
+
+int main() {
+    int n, k;
+    char s[100005];
+
+    scanf("%d %d", &n, &k);
+    scanf("%s", s);
+
+    printf("%s\n", highestValuePalindrome(s, n, k));
+    return 0;
+}
+
+10.Lily's Homework
+#!/bin/python3
+
+import math
+import os
+import random
+import re
+import sys
+
+def lilysHomework(arr):
+    n = len(arr)
+
+    def count_swaps(target):
+        visited = [False] * n
+        index_map = {value: i for i, value in enumerate(arr)}
+        swaps = 0
+
+        for i in range(n):
+            if visited[i] or arr[i] == target[i]:
+                continue
+
+            cycle_size = 0
+            j = i
+            while not visited[j]:
+                visited[j] = True
+                j = index_map[target[j]]
+                cycle_size += 1
+
+            if cycle_size > 1:
+                swaps += cycle_size - 1
+
+        return swaps
+
+    asc = sorted(arr)
+    desc = sorted(arr, reverse=True)
+
+    return min(count_swaps(asc), count_swaps(desc))
+
+
+
+
+if __name__ == '__main__':
+    fptr = open(os.environ['OUTPUT_PATH'], 'w')
+
+    n = int(input().strip())
+
+    arr = list(map(int, input().rstrip().split()))
+
+    result = lilysHomework(arr)
+
+    fptr.write(str(result) + '\n')
+
+    fptr.close()
+
+11.Tree: Preorder Traversal
+#include <bits/stdc++.h>
+using namespace std;
+
+// ------------------ Node definition ------------------
+struct Node {
+    int data;
+    Node* left;
+    Node* right;
+    Node(int val) {
+        data = val;
+        left = nullptr;
+        right = nullptr;
+    }
+};
+
+// ------------------ Insert into BST ------------------
+Node* insert(Node* root, int val) {
+    if (root == nullptr) {
+        return new Node(val);
+    }
+    if (val < root->data) {
+        root->left = insert(root->left, val);
+    } else {
+        root->right = insert(root->right, val);
+    }
+    return root;
+}
+
+// ------------------ Preorder Traversal ------------------
+void preOrder(Node* root) {
+    if (root == nullptr) return;
+    cout << root->data << " ";
+    preOrder(root->left);
+    preOrder(root->right);
+}
+
+// ------------------ Main ------------------
+int main() {
+    int n;
+    cin >> n;  // number of nodes
+    Node* root = nullptr;
+
+    // Build BST from input
+    for (int i = 0; i < n; i++) {
+        int val;
+        cin >> val;
+        root = insert(root, val);
+    }
+
+    // Preorder traversal
+    preOrder(root);
+    return 0;
+}
+
+12.Tree: Huffman Decoding
+import queue as Queue
+
+cntr = 0
+
+class Node:
+    def __init__(self, freq, data):
+        self.freq = freq
+        self.data = data
+        self.left = None
+        self.right = None
+        global cntr
+        self._count = cntr
+        cntr = cntr + 1
+        
+    def __lt__(self, other):
+        if self.freq != other.freq:
+            return self.freq < other.freq
+        return self._count < other._count
+
+def huffman_hidden():#builds the tree and returns root
+    q = Queue.PriorityQueue()
+
+    
+    for key in freq:
+        q.put((freq[key], key, Node(freq[key], key) ))
+    
+    while q.qsize() != 1:
+        a = q.get()
+        b = q.get()
+        obj = Node(a[0] + b[0], '\0' )
+        obj.left = a[2]
+        obj.right = b[2]
+        q.put((obj.freq, obj.data, obj ))
+        
+    root = q.get()
+    root = root[2]#contains root object
+    return root
+
+def dfs_hidden(obj, already):
+    if(obj == None):
+        return
+    elif(obj.data != '\0'):
+        code_hidden[obj.data] = already
+        
+    dfs_hidden(obj.right, already + "1")
+    dfs_hidden(obj.left, already + "0")
+
+"""class Node:
+    def __init__(self, freq,data):
+        self.freq= freq
+        self.data=data
+        self.left = None
+        self.right = None
+"""        
+
+# Enter your code here. Read input from STDIN. Print output to STDOUT
+def decodeHuff(root, s):
+    curr = root
+    result = []
+
+    for bit in s:
+        if bit == '0':
+            curr = curr.left
+        else:
+            curr = curr.right
+
+        # Check if we reached a leaf node
+        if curr.left is None and curr.right is None:
+            result.append(curr.data)   # append decoded character
+            curr = root                # reset to root
+
+    print("".join(result))
+
+ip = input()
+freq = {}#maps each character to its frequency
+
+cntr = 0
+
+for ch in ip:
+    if(freq.get(ch) == None):
+        freq[ch] = 1
+    else:
+        freq[ch]+=1
+
+root = huffman_hidden()#contains root of huffman tree
+
+code_hidden = {}#contains code for each object
+
+dfs_hidden(root, "")
+
+if len(code_hidden) == 1:#if there is only one character in the i/p
+    for key in code_hidden:
+        code_hidden[key] = "0"
+
+toBeDecoded = ""
+
+for ch in ip:
+   toBeDecoded += code_hidden[ch]
+
+decodeHuff(root, toBeDecoded)
+
+13.Binary Search Tree : Lowest Common Ancestor
+#include <stdio.h>
+#include <string.h>
+#include <math.h>
+#include <stdlib.h>
+
+struct node {
+    
+    int data;
+    struct node *left;
+    struct node *right;
+  
+};
+
+struct node* insert( struct node* root, int data ) {
+		
+	if(root == NULL) {
+	
+        struct node* node = (struct node*)malloc(sizeof(struct node));
+
+        node->data = data;
+
+        node->left = NULL;
+        node->right = NULL;
+        return node;
+	  
+	} else {
+      
+		struct node* cur;
+		
+		if(data <= root->data) {
+            cur = insert(root->left, data);
+            root->left = cur;
+		} else {
+            cur = insert(root->right, data);
+            root->right = cur;
+		}
+	
+		return root;
+	}
+}
+
+/* you only have to complete the function given below.  
+node is defined as  
+
+struct node {
+    
+    int data;
+    struct node *left;
+    struct node *right;
+  
+};
+
+*/
+struct node *lca( struct node *root, int v1, int v2 ) {
+    if (root == NULL) return NULL;
+    if(v1< root->data && v2 < root->data){
+        return lca(root->left,v1,v2);
+        
+    }
+    if(v1> root->data && v2 > root->data){
+        return lca(root->right,v1,v2);
+        
+    }
+    return root;
+}
+
+
+int main() {
+  
+    struct node* root = NULL;
+    
+    int t;
+    int data;
+
+    scanf("%d", &t);
+
+    while(t-- > 0) {
+        scanf("%d", &data);
+        root = insert(root, data);
+    }
+  	int v1;
+  	int v2;
+  
+  	scanf("%d%d", &v1, &v2);
+	struct node *ans = lca(root, v1, v2);
+  	printf("%d", ans->data);
+  	
+    return 0;
+}
+
+14.No Prefix Set
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define ALPHABET 26
+#define MAXLEN 61
+
+typedef struct TrieNode {
+    struct TrieNode *children[ALPHABET];
+    int isEnd; // word ends here
+} TrieNode;
+
+TrieNode* createNode() {
+    TrieNode* node = (TrieNode*)malloc(sizeof(TrieNode));
+    for (int i = 0; i < ALPHABET; i++) node->children[i] = NULL;
+    node->isEnd = 0;
+    return node;
+}
+
+int insert(TrieNode* root, char* word) {
+    TrieNode* curr = root;
+    for (int i = 0; word[i]; i++) {
+        int idx = word[i] - 'a';
+        if (!curr->children[idx])
+            curr->children[idx] = createNode();
+        curr = curr->children[idx];
+
+        // Case 1: prefix exists (already a word ended here)
+        if (curr->isEnd) return 0;
+
+        // Case 2: if this is the last letter and we already have children => 
+        // current word is prefix of another
+        if (word[i+1] == '\0') {
+            for (int j = 0; j < ALPHABET; j++) {
+                if (curr->children[j]) return 0;
+            }
+        }
+    }
+    curr->isEnd = 1;
+    return 1; // inserted successfully
+}
+
+int main() {
+    int n;
+    scanf("%d", &n);
+    TrieNode* root = createNode();
+    char word[MAXLEN];
+
+    for (int i = 0; i < n; i++) {
+        scanf("%s", word);
+        if (!insert(root, word)) {
+            printf("BAD SET\n");
+            printf("%s\n", word);
+            return 0;
+        }
+    }
+
+    printf("GOOD SET\n");
+    return 0;
+}
+
+15.Castle on the Grid
+#include <stdio.h>
+#include <string.h>
+
+#define MAXN 105
+
+char grid[MAXN][MAXN];
+int visited[MAXN][MAXN];
+int qx[MAXN * MAXN], qy[MAXN * MAXN], qd[MAXN * MAXN];
+int n;
+
+int minimumMoves(char grid[MAXN][MAXN], int n, int startX, int startY, int goalX, int goalY) {
+    memset(visited, 0, sizeof(visited));
+
+    int front = 0, rear = 0;
+    qx[rear] = startX;
+    qy[rear] = startY;
+    qd[rear] = 0;
+    visited[startX][startY] = 1;
+    rear++;
+
+    while (front < rear) {
+        int x = qx[front];
+        int y = qy[front];
+        int d = qd[front];
+        front++;
+
+        if (x == goalX && y == goalY) return d;
+
+        // Explore in 4 directions
+        int i;
+
+        // Up
+        for (i = x - 1; i >= 0 && grid[i][y] == '.'; i--) {
+            if (!visited[i][y]) {
+                visited[i][y] = 1;
+                qx[rear] = i;
+                qy[rear] = y;
+                qd[rear] = d + 1;
+                rear++;
+            }
+        }
+        // Down
+        for (i = x + 1; i < n && grid[i][y] == '.'; i++) {
+            if (!visited[i][y]) {
+                visited[i][y] = 1;
+                qx[rear] = i;
+                qy[rear] = y;
+                qd[rear] = d + 1;
+                rear++;
+            }
+        }
+        // Left
+        for (i = y - 1; i >= 0 && grid[x][i] == '.'; i--) {
+            if (!visited[x][i]) {
+                visited[x][i] = 1;
+                qx[rear] = x;
+                qy[rear] = i;
+                qd[rear] = d + 1;
+                rear++;
+            }
+        }
+        // Right
+        for (i = y + 1; i < n && grid[x][i] == '.'; i++) {
+            if (!visited[x][i]) {
+                visited[x][i] = 1;
+                qx[rear] = x;
+                qy[rear] = i;
+                qd[rear] = d + 1;
+                rear++;
+            }
+        }
+    }
+    return -1; // if unreachable
+}
+
+int main() {
+    scanf("%d", &n);
+    for (int i = 0; i < n; i++) {
+        scanf("%s", grid[i]);
+    }
+
+    int startX, startY, goalX, goalY;
+    scanf("%d %d %d %d", &startX, &startY, &goalX, &goalY);
+
+    int ans = minimumMoves(grid, n, startX, startY, goalX, goalY);
+    printf("%d\n", ans);
+
+    return 0;
+}
+
+16.Roads and Libraries
+#include <stdio.h>
+#include <stdlib.h>
+
+#define MAXN 100005
+
+int visited[MAXN];
+int *adj[MAXN];
+int degree[MAXN];
+
+void addEdge(int u, int v) {
+    adj[u] = realloc(adj[u], (degree[u] + 1) * sizeof(int));
+    adj[v] = realloc(adj[v], (degree[v] + 1) * sizeof(int));
+    adj[u][degree[u]++] = v;
+    adj[v][degree[v]++] = u;
+}
+
+int dfs(int u) {
+    visited[u] = 1;
+    int size = 1;
+    for (int i = 0; i < degree[u]; i++) {
+        int v = adj[u][i];
+        if (!visited[v]) {
+            size += dfs(v);
+        }
+    }
+    return size;
+}
+
+long long roadsAndLibraries(int n, int c_lib, int c_road, int m, int cities[][2]) {
+    if (c_lib <= c_road) {
+        return (long long)n * c_lib;
+    }
+
+    // Reset graph
+    for (int i = 1; i <= n; i++) {
+        visited[i] = 0;
+        degree[i] = 0;
+        free(adj[i]);
+        adj[i] = NULL;
+    }
+
+    // Build graph
+    for (int i = 0; i < m; i++) {
+        int u = cities[i][0];
+        int v = cities[i][1];
+        addEdge(u, v);
+    }
+
+    long long total_cost = 0;
+
+    // For each connected component
+    for (int i = 1; i <= n; i++) {
+        if (!visited[i]) {
+            int comp_size = dfs(i);
+            total_cost += c_lib + (long long)(comp_size - 1) * c_road;
+        }
+    }
+
+    return total_cost;
+}
+
+int main() {
+    int q;
+    scanf("%d", &q);
+
+    while (q--) {
+        int n, m, c_lib, c_road;
+        scanf("%d %d %d %d", &n, &m, &c_lib, &c_road);
+
+        int cities[m][2];
+        for (int i = 0; i < m; i++) {
+            scanf("%d %d", &cities[i][0], &cities[i][1]);
+        }
+
+        printf("%lld\n", roadsAndLibraries(n, c_lib, c_road, m, cities));
+    }
+
+    return 0;
+}
+
